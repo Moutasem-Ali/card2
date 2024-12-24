@@ -1,0 +1,325 @@
+<!DOCTYPE html >
+<html lang="en" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="bootstrist/css/bootstrap.map-5.3.3-din.css" rel="stylesheet" />
+    <link href="bootstrap-5.3.3-dist/css/bootstrap.min.css" rel="stylesheet" />
+    
+    <link rel="stylesheet" href="fontawesome-free-6.6.0-web/css/all.min.css" />
+</head>
+<body >
+      <!-- New Header with Search -->
+      <header class="main-header">
+        <img src="/img/Fit _ Fix.jpg"  alt="">
+        <h3 >متجري</h3>
+        <div class="nav-menu">
+            <a href="index.html">عروض المميزه</a>
+            <a href="names_company.html">شركات</a>
+            <a href="follows.html">اتابع</a>
+        </div>
+       
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="ابحث عن المنتجات..." id="searchInput">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        <div class="cart-icon" id="cartIcon">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count">0</span>
+        </div>
+    </header>
+
+   
+
+    <div class="container">
+        <div class="products-grid" id="productsGrid">
+            <!-- Products will be dynamically added here -->
+        </div>
+    </div>
+
+    <div class="cart-modal" id="cartModal">
+        <div class="cart-header">
+            <h2> سلة التسوق</h2>
+            <i class="fas fa-times" id="closeCart" style="cursor: pointer;"></i>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <!-- Cart items will be dynamically added here -->
+        </div>
+        <div class="cart-total" id="cartTotal">
+            Total: $0.00
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <script>
+        // Sample product data
+        const products = [
+    {
+        id: 1,
+        name: "سيارة فاخرة",
+        company: "شركة السيارات المتحدة",
+        description: "سيارة رياضية فاخرة بتصميم عصري وأداء متميز",
+        price: 99.99,
+        originalPrice: 149.99,
+        image: "img/cars2.jpg"
+    },
+    {
+        id: 5,
+        name: "سيارة فاخرة",
+        company: "شركة السيارات المتحدة",
+        description: "سيارة رياضية فاخرة بتصميم عصري وأداء متميز",
+        price: 9.99,
+        originalPrice: 149.99,
+        image: "img/car.jpg"
+    },
+    {
+        id: 6,
+        name: "سيارة فاخرة",
+        company: "شركة السيارات المتحدة",
+        description: "سيارة رياضية فاخرة بتصميم عصري وأداء متميز",
+        price: 900.99,
+        originalPrice: 149.99,
+        image: "img/cars3.jpg"
+    },
+    {
+        id: 7,
+        name: "سيارة فاخرة",
+        company: "شركة السيارات المتحدة",
+        description: "سيارة رياضية فاخرة بتصميم عصري وأداء متميز",
+        price: 99.999,
+        originalPrice: 149.99,
+        image: "img/img_car.jpg"
+    },
+    {
+        id: 8,
+        name: "سيارة فاخرة",
+        company: "شركة السيارات المتحدة",
+        description: "سيارة رياضية فاخرة بتصميم عصري وأداء متميز",
+        price: 996.99,
+        originalPrice: 149.99,
+        image: "img/cars2.jpg"
+    },
+    {
+        id: 9,
+        name: "سيارة فاخرة",
+        company: "شركة السيارات المتحدة",
+        description: "سيارة رياضية فاخرة بتصميم عصري وأداء متميز",
+        price: 998.99,
+        originalPrice: 149.99,
+        image: "img/cars1.jpg"
+    },
+    {
+        id: 2,
+        name: "دجاج مشوي",
+        company: "مطاعم الذواقة",
+        description: "دجاج طازج مشوي مع التتبيلة الخاصة",
+        price: 199.99,
+        originalPrice: 249.99,
+        image: "img/__opt__aboutcom__coeus__resources__content_migration__simply_recipes__uploads__2007__04__honey-glazed-roast-chicken-horiz-a-1800-2057270028084ff2bdb.jpg"
+    },
+    {
+        id: 3,
+        name: "برجر لحم",
+        company: "برجر هاوس",
+        description: "برجر لحم طازج مع الخضروات والصوص المميز",
+        price: 79.99,
+        originalPrice: 99.99,
+        image: "img/1.jpg"
+    },
+    {
+        id: 4,
+        name: "برجر دجاج",
+        company: "برجر هاوس",
+        description: "برجر دجاج مشوي مع صوص خاص",
+        price: 69.99,
+        originalPrice: 89.99,
+        image: "img/1.jpg"
+    }
+];
+
+        // Cart state
+        let cart = [];
+
+        // DOM elements
+        const productsGrid = document.getElementById('productsGrid');
+        const cartModal = document.getElementById('cartModal');
+        const cartItems = document.getElementById('cartItems');
+        const cartTotal = document.getElementById('cartTotal');
+        const cartCount = document.querySelector('.cart-count');
+        const overlay = document.getElementById('overlay');
+
+        // Modified initialize products function
+        function initializeProducts() {
+    productsGrid.innerHTML = products.map(product => {
+        const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+        
+        return `
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="${product.image}" alt="${product.name}">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">${product.name}</h3>
+                    <p class="product-description">${product.description}</p>
+                    <a href="#" class="company-link" onclick="openCompanyPage('${product.company}')">
+                        <i class="fas fa-building"></i> ${product.company}
+                    </a>
+                    <div class="price-container">
+                        <span class="original-price">$${product.originalPrice.toFixed(2)}</span>
+                        <span class="discount-price">$${product.price.toFixed(2)}</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart(${product.id})">
+                        <i class="fas fa-shopping-cart"></i>
+                        إضافة إلى السلة
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Add function to handle company page navigation
+function openCompanyPage(companyName) {
+    // You can modify this to navigate to actual company pages
+    window.location.href = `company.html?name=${encodeURIComponent(companyName)}`;
+}
+
+      // Update the search functionality to include company names
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const filteredProducts = products.filter(product => 
+        product.name.toLowerCase().includes(searchTerm) ||
+        product.description.toLowerCase().includes(searchTerm) ||
+        product.company.toLowerCase().includes(searchTerm)
+    );
+    
+    // Use the same template as initializeProducts
+    productsGrid.innerHTML = filteredProducts.map(product => {
+        const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+        
+        return `
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="${product.image}" alt="${product.name}">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">${product.name}</h3>
+                    <p class="product-description">${product.description}</p>
+                    <a href="#" class="company-link" onclick="openCompanyPage('${product.company}')">
+                        <i class="fas fa-building"></i> ${product.company}
+                    </a>
+                    <div class="price-container">
+                        <span class="original-price">$${product.originalPrice.toFixed(2)}</span>
+                        <span class="discount-price">$${product.price.toFixed(2)}</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart(${product.id})">
+                        <i class="fas fa-shopping-cart"></i>
+                        إضافة إلى السلة
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+});
+        // Add to cart function
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const existingItem = cart.find(item => item.id === productId);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    ...product,
+                    quantity: 1
+                });
+            }
+
+            updateCart();
+        }
+
+           // Modified cart update function to show original prices
+           function updateCart() {
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="price-container">
+                            <span class="original-price">$${item.originalPrice.toFixed(2)}</span>
+                            <span class="discount-price">$${item.price.toFixed(2)}</span>
+                        </div>
+                        <div>الكمية: ${item.quantity}</div>
+                    </div>
+                    <div class="remove-item" onclick="removeFromCart(${item.id})">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotal.textContent = `المجموع: $${total.toFixed(2)}`;
+
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.textContent = count;
+        }
+
+        // Remove from cart
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+        }
+
+        // Toggle cart modal
+        document.getElementById('cartIcon').addEventListener('click', () => {
+            cartModal.classList.add('active');
+            overlay.classList.add('active');
+        });
+
+        document.getElementById('closeCart').addEventListener('click', () => {
+            cartModal.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            cartModal.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+         // Initialize the page
+         initializeProducts();
+    </script>
+    <script>
+        // Add search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredProducts = products.filter(product => 
+                product.name.toLowerCase().includes(searchTerm)
+            );
+            
+            productsGrid.innerHTML = filteredProducts.map(product => `
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="${product.image}" alt="${product.name}">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">${product.name}</h3>
+                        <p class="product-description">${product.description}</p>
+                        <div class="product-price">$${product.price.toFixed(2)}</div>
+                        <del class="price-del">${product.originalPrice}</del>
+                        <button class="add-to-cart" onclick="addToCart(${product.id})">
+                            <i class="fas fa-shopping-cart"></i>
+                            إضافة إلى السلة
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        });
+    </script>
+       
+    <script src="/bootstrap-5.3.3-dist/js/bootstrap.bundle.js"></script>
+</body>
+</html>
